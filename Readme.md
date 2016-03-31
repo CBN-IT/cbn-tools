@@ -12,13 +12,13 @@ Features:
 ## Installing
 
 You can install it directly from the git repository by using the following command:
-```
+```bash
 npm install -g git+ssh://git@bitbucket.org:cbn-it/cbn-tools.git
 ```
 
 ## Usage
 
-```
+```bash
 cbn init # creates a default cbn-build.js file
 cbn # runs all build tasks - vulcanize, CSS, JS processors (for the development environment)
 cbn --env production # change the environment
