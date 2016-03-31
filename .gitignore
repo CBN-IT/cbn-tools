@@ -25,3 +25,4 @@ node_modules/
 dist/
 .sass-cache
 .tmp
+npm-debug.log
