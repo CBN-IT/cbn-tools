@@ -8,6 +8,7 @@
 // Dependencies:
 var path = require('path');
 var gulp = require('gulp');
+var watch = require('gulp-watch');
 var gutil = require('gulp-util');
 var chalk = require('chalk');
 var $ = require('gulp-load-plugins')();
@@ -96,31 +97,49 @@ gulp.task('clean-before', function (cb) {
  * Copies the source files to the target directory.
  */
 gulp.task('copy', function () {
+	var stream = merge();
 	var gulpSrc = gulpSrcPath();
-	var copyComponents = gulp.src(config.patterns.components, gulpSrc)
-		.pipe(gulp.dest(config.dest));
-	var copyOthers = gulp.src(config.patterns.others, gulpSrc)
-		.pipe(gulp.dest(config.dest));
 	
-	return merge(copyComponents, copyOthers);
+	var copyFiles = normalizeGlobArray(config.patterns.components);
+	copyFiles = copyFiles.concat(normalizeGlobArray(config.patterns.others));
+	copyFiles.forEach(function (copySrc) {
+		stream.add( gulp.src(copySrc, gulpSrc)
+			.pipe(gulp.dest(config.dest)) );
+	});
+	
+	return stream.isEmpty() ? null : stream;
 });
 
 /**
  * Compiles the application's JavaScript files.
  */
 gulp.task('build-scripts', [ 'copy' ], function () {
-	return gulp.src(config.patterns.scripts, gulpSrcPath())
-		.pipe(buildJs())
-		.pipe(gulp.dest(config.dest));
+	var stream = merge();
+	var gulpSrc = gulpSrcPath();
+	var buildScripts = normalizeGlobArray(config.patterns.scripts);
+	
+	buildScripts.forEach(function (scriptPatterns) {
+		stream.add( gulp.src(scriptPatterns, gulpSrc)
+			.pipe(buildJs())
+			.pipe(gulp.dest(config.dest)) );
+	});
+	return stream.isEmpty() ? null : stream;
 });
 
 /**
  * Compiles/post-processes the application's main CSS styles.
  */
 gulp.task('build-styles', [ 'copy' ], function () {
-	return gulp.src(config.patterns.styles, gulpSrcPath())
-		.pipe(buildCss())
-		.pipe(gulp.dest(config.dest));
+	var stream = merge();
+	var gulpSrc = gulpSrcPath();
+	var buildStyles = normalizeGlobArray(config.patterns.styles);
+	
+	buildStyles.forEach(function (stylePatterns) {
+		stream.add( gulp.src(stylePatterns, gulpSrc)
+			.pipe(buildCss())
+			.pipe(gulp.dest(config.dest)) );
+	});
+	return stream.isEmpty() ? null : stream;
 });
 
 
@@ -158,12 +177,40 @@ gulp.task('vulcanize', [ 'copy' ], function () {
  * Vulcanizes the web components.
  */
 gulp.task('watch', function () {
-	var src = config.src;
-	gulp.watch(addPrefixToPatterns(config.patterns.components, src), ['vulcanize']);
-	gulp.watch(addPrefixToPatterns(config.patterns.others, src), ['vulcanize']);
-	gulp.watch(addPrefixToPatterns(config.patterns.scripts, src), ['build-scripts']);
-	gulp.watch(addPrefixToPatterns(config.patterns.styles, src), ['build-styles']);
-	gulp.watch(addPrefixToPatterns(config.patterns.vulcanizeWatch, src), ['vulcanize']);
+	var gulpSrc = gulpSrcPath();
+	gulpSrc.events = [ 'add', 'change', 'unlink' ];
+	var stream = merge();
+	
+	var copyFiles = normalizeGlobArray(config.patterns.components);
+	copyFiles = copyFiles.concat(normalizeGlobArray(config.patterns.others));
+	var buildStyles = normalizeGlobArray(config.patterns.styles);
+	var buildScripts = normalizeGlobArray(config.patterns.scripts);
+	var vulcanizeFiles = normalizeGlobArray(config.patterns.vulcanize);
+	vulcanizeFiles = vulcanizeFiles.concat(normalizeGlobArray(config.patterns.vulcanize));
+	
+	function watchArrExecTask(arr, tasks) {
+		arr.forEach(function (watchPatterns) {
+			stream.add(
+				watch(watchPatterns, gulpSrc, $.batch(function (events, done) {
+						runSequence(tasks, done);
+					}))
+					.on('error', function(error) {
+						// ignore file not found errors (caused by temporary files being used by some IDEs)
+						if (error && error.code == 'ENOENT') {
+							return;
+						}
+						console.log('Watch/build error:', error);
+					})
+			);
+		});
+	}
+	
+	watchArrExecTask(copyFiles, 'copy');
+	watchArrExecTask(buildScripts, 'build-scripts');
+	watchArrExecTask(buildStyles, 'build-styles');
+	watchArrExecTask(vulcanizeFiles, 'vulcanize');
+	
+	return stream.isEmpty() ? null : stream;
 });
 
 /**
@@ -185,7 +232,7 @@ gulp.task('serve',
  */
 gulp.task('default', function(cb) {
 	runSequence('clean-before', 
-		['build-scripts', 'build-styles', 'vulcanize'], cb);
+		['copy', 'build-scripts', 'build-styles', 'vulcanize'], cb);
 });
 
 
@@ -210,6 +257,10 @@ process.nextTick(function () {
  * Utility functions.
  */
 
+/**
+ * Returns the `gulp.src` options object for a source path.
+ * @returns {{cwd: String, base: String}}
+ */
 function gulpSrcPath() {
 	return {
 		cwd: path.resolve("./" + config.src),
@@ -218,20 +269,17 @@ function gulpSrcPath() {
 }
 
 /**
- * Adds a base prefix to the specified patterns list.
+ * Checks if a given glob array has nested lists and returns the normalized array (array of arrays).
  * 
- * @param {Array} patterns The patterns to add prefix to.
- * @param {String} base The prefix (base path) to add.
- * @return {Array} The patterns with the added base path.
+ * @param {Array} globs The input globs.
+ * @return {[Array]} The normalized globs list.
  */
-function addPrefixToPatterns(patterns, base) {
-	patterns = patterns.slice();
-	for (var i=0; i<patterns.length; i++) {
-		if (patterns[i][0] == '!') {
-			patterns[i] = '!' + base + patterns[i].substr(1);
-		} else {
-			patterns[i] = base + patterns[i];
-		}
+function normalizeGlobArray(globs) {
+	if (!globs || !globs.length)
+		return [];
+	if (!Array.isArray(globs[0])) {
+		return [ globs ]; // array of 1 glob list
 	}
-	return patterns;
+	return globs;
 }
+
