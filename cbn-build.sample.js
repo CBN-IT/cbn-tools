@@ -18,9 +18,6 @@ module.exports = {
 	 * Build profiles, each profile can replace some configuration variables.
 	 */
 	profiles: {
-		serve: {
-			dest: 'target/demo/'
-		},
 		development: {
 			dest: 'target/app/'
 		},
@@ -31,9 +28,6 @@ module.exports = {
 		}
 	},
 	defaultProfile: 'development',
-	
-	// include custom tasks from here
-	tasksPath: './cbn-build/',
 	
 	/**
 	 * GLOB patterns of the files to be copied / processed by the build system.
@@ -103,9 +97,12 @@ module.exports = {
 		 * Other files to be copied (unmodified) to the target directory.
 		 */
 		others: [
-			"**",
-			'!bower_components/**',
-			'!**/*.{html,js,css}'
+			[
+				"**",
+				'!bower_components/**',
+				'!**/*.{html,js,css}'
+			],
+			[ "*.{html,js,css}" ]
 		],
 		
 		/**
@@ -113,9 +110,11 @@ module.exports = {
 		 * (relative to the destination directory).
 		 */
 		clean: [
-			"target/{demo,app,app-prod}/**",
-			"!target/{demo,app}/WEB-INF/**"
+			"target/{app,app-prod}/**",
+			// exclude WEB-INF (for java environments)
+			"!target/{app}/WEB-INF/**"
 		],
+		
 		/**
 		 * Production-only clean patterns (always executed before the build task on production).
 		 */

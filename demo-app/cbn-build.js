@@ -18,7 +18,7 @@ module.exports = {
 	 * Build profiles, each profile can replace some configuration variables.
 	 */
 	profiles: {
-		serve: {
+		demo: {
 			dest: 'target/demo/',
 			vulcanize: true
 		},
@@ -32,9 +32,6 @@ module.exports = {
 		}
 	},
 	defaultProfile: 'development',
-	
-	// include custom tasks from here
-	tasksPath: './cbn-build/',
 	
 	/**
 	 * GLOB patterns of the files to be copied / processed by the build system.
@@ -54,7 +51,7 @@ module.exports = {
 		 * Additionally, all styles in vulcanized elements will also be parsed.
 		 */
 		styles: [
-			'**/*.{css,html}',
+			'styles/**/*.{css,html}',
 			"!bower_components/**"
 		],
 		
@@ -106,10 +103,12 @@ module.exports = {
 		 * Other files to be copied (unmodified) to the target directory.
 		 */
 		others: [
-			"**",
-			'!bower_components/**',
-			// '!**/*.{html,js,css}',
-			'**.html'
+			[
+				"**",
+				'!bower_components/**',
+				'!**/*.{html,js,css}'
+			],
+			[ "*.{html,js,css}" ]
 		],
 		
 		/**
