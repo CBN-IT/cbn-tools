@@ -75,6 +75,7 @@ module.exports = {
 		 */
 		vulcanizeProcessFiles: [
 			'**',
+			'!**/test_inline.js',
 			'!bower_components/**'
 		],
 		

@@ -149,19 +149,31 @@ gulp.task('build-styles', [ 'copy' ], function () {
 gulp.task('vulcanize', [ 'copy' ], function () {
 	var gulpSrc = gulpSrcPath();
 	
+	var workaroundJsPipe =
+			lazypipe().pipe(function () {
+				// workaround for vulcanize '-->' bug
+				return $.if(/\.(html|js)/i, (lazypipe()
+					.pipe($.replace, /--\\x3e/g, function (val) {
+						// console.log('FOUND', val);
+						return '-->';
+					}))());
+			});
+	
 	var processingPipe = lazypipe()
 		.pipe(function() {
 			return $.if(config.patterns.vulcanizeProcessFiles, (lazypipe()
 				.pipe(function() { return $.if(/\.(html|css)$/i, buildCss()); })
 				.pipe(function() { return $.if(/\.(html|js)$/i, buildJs()); })
 			)());
-		});
+		})
+		.pipe(workaroundJsPipe);
 	
 	if (config.vulcanize) {
 		// vulcanize the files!
 		return gulp.src(config.patterns.vulcanize, gulpSrc)
 			// run cripsper and vulcanize on the html files
 			.pipe(buildVulcanize(processingPipe, gulpSrc.cwd))
+			.pipe(workaroundJsPipe())
 			// save the files
 			.pipe(gulp.dest(config.dest));
 	} else {

@@ -14,7 +14,7 @@
 	// and give it some initial binding values
 	// Learn more about auto-binding templates at http://goo.gl/Dx1u2g
 	let app = document.querySelector('#app');
-	
+		
 	app.displayInstalledToast = () => {
 		// Check to make sure caching is actually enabled—it won't be in the dev environment.
 		if (!document.querySelector('platinum-sw-cache').disabled) {
