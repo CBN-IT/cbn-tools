@@ -59,7 +59,8 @@ module.exports = {
 		 * The html files to be vulcanized.
 		 */
 		vulcanize: [
-			'elements/elements.html'
+			'elements/elements.html',
+			'elements/scripts.html'
 		],
 		
 		/**
@@ -106,8 +107,8 @@ module.exports = {
 		others: [
 			[
 				"**",
-				'!bower_components/**',
-				'!**/*.{html,js,css}'
+				'!bower_components/**'
+				//'!**/*.{html,js,css}'
 			],
 			[ "*.{html,js,css}" ]
 		],
