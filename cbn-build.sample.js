@@ -53,7 +53,10 @@ module.exports = {
 		 * The html files to be vulcanized.
 		 */
 		vulcanize: [
-			'elements/elements.html'
+			'elements/elements.html',
+			'elements/elementsFirst.html',
+			'elements/elementsLogin.html',
+			'elements/elementsAdmin.html'
 		],
 		
 		/**
@@ -61,7 +64,11 @@ module.exports = {
 		 */
 		developmentVulcanize: [
 			"**/*.{html,js,css}",
-			"bower_components/**"
+			"bower_components/**",
+			
+			// skip unit test files
+			'!bower_components/**/test/**',
+			'!bower_components/**/tests/**'
 		],
 		
 		/**
@@ -84,10 +91,14 @@ module.exports = {
 		 * Path to the bower components to be copied to the target directory.
 		 */
 		components: [
-			'bower_components/webcomponentsjs/webcomponents-lite.js',
-			'bower_components/*/resources/*',
-			'bower_components/*/fonts/*',
-			
+			'bower_components/webcomponentsjs/*',
+			'bower_components/*/resources/**',
+			'bower_components/*/fonts/**',
+			'bower_components/cbn-ace-editor/src-min-noconflict/**',
+			'bower_components/sw-toolbox/**',
+			'bower_components/platinum-sw/service-worker.js',
+			'bower_components/platinum-sw/bootstrap/*',
+
 			// skip unit test files
 			'!bower_components/**/test/**',
 			'!bower_components/**/tests/**'
