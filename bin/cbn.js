@@ -198,7 +198,7 @@ gulp.task('watch', function () {
 	var buildStyles = normalizeGlobArray(config.patterns.styles);
 	var buildScripts = normalizeGlobArray(config.patterns.scripts);
 	var vulcanizeFiles = normalizeGlobArray(config.patterns.vulcanize);
-	vulcanizeFiles = vulcanizeFiles.concat(normalizeGlobArray(config.patterns.vulcanize));
+	vulcanizeFiles = vulcanizeFiles.concat(normalizeGlobArray(config.patterns.vulcanizeWatch));
 	
 	function watchArrExecTask(arr, tasks) {
 		arr.forEach(function (watchPatterns) {
