@@ -13,6 +13,7 @@ module.exports = {
 	minify: false, // minify / uglify the JavaScript code?
 	crisper: true, // run crisper to split JS from the HTML files?
 	crisperIncludeScript: false, // tell crisper to include the newly split <script> from the HTML?
+	renameAssets: false, // rename assets to include a revision hash?
 	
 	/**
 	 * Build profiles, each profile can replace some configuration variables.
@@ -24,7 +25,8 @@ module.exports = {
 		production: {
 			dest: 'target/app-prod/',
 			vulcanize: true,
-			minify: false
+			minify: false,
+			renameAssets: true
 		}
 	},
 	defaultProfile: 'development',
@@ -114,6 +116,19 @@ module.exports = {
 				'!**/*.{html,js,css}'
 			],
 			[ "*.{html,js,css}" ]
+		],
+		
+		/**
+		 * Assets to rename. Only matches those among the `others` and `components` groups.
+		 */
+		renameAssets: [
+			'bower_components/webcomponentsjs/*',
+			'bower_components/*/resources/**',
+			'bower_components/*/fonts/**',
+			'bower_components/cbn-ace-editor/src-min-noconflict/**',
+			'bower_components/sw-toolbox/**',
+			'bower_components/platinum-sw/service-worker.js',
+			'bower_components/platinum-sw/bootstrap/*'
 		],
 		
 		/**

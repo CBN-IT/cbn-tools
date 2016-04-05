@@ -15,6 +15,7 @@ var $ = require('gulp-load-plugins')();
 var del = require('del');
 var runSequence = require('run-sequence');
 var merge = require('merge-stream');
+var merge2 = require('merge2');
 var lazypipe = require('lazypipe');
 var connect = require('gulp-connect');
 var minimist = require('minimist');
@@ -97,17 +98,19 @@ gulp.task('clean-before', function (cb) {
  * Copies the source files to the target directory.
  */
 gulp.task('copy', function () {
-	var stream = merge();
+	var stream = merge2();
 	var gulpSrc = gulpSrcPath();
 	
 	var copyFiles = normalizeGlobArray(config.patterns.components);
 	copyFiles = copyFiles.concat(normalizeGlobArray(config.patterns.others));
 	copyFiles.forEach(function (copySrc) {
 		stream.add( gulp.src(copySrc, gulpSrc)
-			.pipe(gulp.dest(config.dest)) );
+			.pipe($.if((config.renameAssets ? config.patterns.renameAssets : false), $.rev()))
+		);
 	});
-	
-	return stream.isEmpty() ? null : stream;
+	return stream.pipe(gulp.dest(config.dest))
+		.pipe($.rev.manifest())
+		.pipe(gulp.dest(config.dest));
 });
 
 /**
