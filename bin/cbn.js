@@ -126,6 +126,9 @@ gulp.task('rename-assets', function(callback) {
 		return callback();
 	}
 	var renameAssets = config.patterns.renameAssets;
+	if(!config.patterns.renameAssets || !config.patterns.renameAssets.length){
+		return callback();
+	}
 	var dest = gulpDestPath();
 	var manifestPath = path.resolve("./" + config.dest + "rev-manifest.json");
 	function rename(idx) {
