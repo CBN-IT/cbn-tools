@@ -19,6 +19,10 @@ var merge2 = require('merge2');
 var lazypipe = require('lazypipe');
 var connect = require('gulp-connect');
 var minimist = require('minimist');
+var fs = require('fs');
+var crypto = require('crypto');
+var glob = require('glob-all');
+var revReplace=require('gulp-rev-replace');
 
 var options = minimist(process.argv.slice(2), {
 	string: [ 'env', 'cwd', 'buildfile' ],
@@ -104,13 +108,105 @@ gulp.task('copy', function () {
 	var copyFiles = normalizeGlobArray(config.patterns.components);
 	copyFiles = copyFiles.concat(normalizeGlobArray(config.patterns.others));
 	copyFiles.forEach(function (copySrc) {
-		stream.add( gulp.src(copySrc, gulpSrc)
-			.pipe($.if((config.renameAssets ? config.patterns.renameAssets : false), $.rev()))
-		);
+		stream.add( gulp.src(copySrc, gulpSrc));
 	});
-	return stream.pipe(gulp.dest(config.dest))
-		.pipe($.rev.manifest())
-		.pipe(gulp.dest(config.dest));
+	return stream.pipe(gulp.dest(config.dest));
+});
+
+
+// Generate config data for the <sw-precache-cache> element.
+// This include a list of files that should be precached, as well as a (hopefully unique) cache
+// id that ensure that multiple PSK projects don't share the same Cache Storage.
+// This task does not run by default, but if you are interested in using service worker caching
+// in your project, please enable it within the 'default' task.
+// See https://github.com/PolymerElements/polymer-starter-kit#enable-service-worker-support
+// for more context.
+gulp.task('rename-assets', function(callback) {
+	if (options.env !== "production") {
+		return callback();
+	}
+	var renameAssets = config.patterns.renameAssets;
+	var dest = gulpDestPath();
+	var manifestPath = path.resolve("./" + config.dest + "rev-manifest.json");
+	function rename(idx) {
+		if(idx>=renameAssets.length){
+			return callback();
+		}
+		var conf = renameAssets[idx];
+		
+		var stream = gulp.src(conf.from,dest)
+			.on('data', function(p){
+				console.log(p.path);
+				var stat = fs.statSync(p.path);
+				if(stat!=null && !stat.isDirectory()) {
+					fs.unlinkSync(p.path);
+				}
+			})
+			.pipe($.rev())
+			.pipe(gulp.dest(config.dest))
+			.pipe($.rev.manifest({
+				merge:true,
+				base:dest.base,
+				cwd: dest.cwd,
+				path:manifestPath
+			}))
+			.pipe(gulp.dest(config.dest))
+			.on('end', function () {
+				gulp.src(conf.to, dest)
+					.pipe($.revReplace({
+						manifest: gulp.src(manifestPath)
+					}))
+					.pipe(gulp.dest(config.dest))
+					.on('end', function () {
+						rename(++idx);
+					});
+			});
+	}
+
+	rename(0);
+});
+
+
+// Generate config data for the <sw-precache-cache> element.
+// This include a list of files that should be precached, as well as a (hopefully unique) cache
+// id that ensure that multiple PSK projects don't share the same Cache Storage.
+// This task does not run by default, but if you are interested in using service worker caching
+// in your project, please enable it within the 'default' task.
+// See https://github.com/PolymerElements/polymer-starter-kit#enable-service-worker-support
+// for more context.
+gulp.task('cache-config', function(callback) {
+	if (options.env !== "production") {
+		return callback();
+	}
+	var cacheConfigF = {
+		cacheId: path.basename(__dirname),
+		disabled: false
+	};
+
+	glob(config.patterns.cacheConfig,
+		{
+			cwd: path.resolve("./" + config.dest),
+			mark:true
+		}, function(error, files) {
+			if (error) {
+				callback(error);
+			} else {
+				files = files.filter(function(f) { return !/\/$/.test(f); });
+				files = files.map(function(f){
+					if(f.indexOf("/")!==0){
+						return "/" + f;
+					}
+				});
+				cacheConfigF.precache = files;
+
+				var md5 = crypto.createHash('md5');
+				md5.update(JSON.stringify(cacheConfigF.precache));
+				cacheConfigF.precacheFingerprint = md5.digest('hex');
+
+				var configPath = path.join(config.dest, 'cache-config.json');
+				fs.writeFile(configPath, JSON.stringify(cacheConfigF), callback);
+			}
+		});
 });
 
 /**
@@ -247,7 +343,7 @@ gulp.task('serve',
  */
 gulp.task('default', function(cb) {
 	runSequence('clean-before', 
-		['copy', 'build-scripts', 'build-styles', 'vulcanize'], cb);
+		['copy', 'build-scripts', 'build-styles', 'vulcanize'],["rename-assets"],['cache-config'], cb);
 });
 
 
@@ -280,6 +376,17 @@ function gulpSrcPath() {
 	return {
 		cwd: path.resolve("./" + config.src),
 		base: './' + config.src
+	};
+}
+
+/**
+ * Returns the `gulp.src` options object for the destination path.
+ * @returns {{cwd: String, base: String}}
+ */
+function gulpDestPath() {
+	return {
+		cwd: path.resolve("./" + config.dest),
+		base: './' + config.dest
 	};
 }
 

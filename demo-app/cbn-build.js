@@ -94,7 +94,7 @@ module.exports = {
 		 * Path to the bower components to be copied to the target directory.
 		 */
 		components: [
-			'bower_components/webcomponentsjs/*',
+			'bower_components/webcomponentsjs/webcomponents-lite.min.js',
 			'bower_components/*/resources/**',
 			'bower_components/*/fonts/**',
 			'bower_components/cbn-ace-editor/src-min-noconflict/**',
@@ -120,18 +120,47 @@ module.exports = {
 		],
 		
 		/**
-		 * Assets to rename. Only matches those among the `others` and `components` groups.
+		 * Assets to rename. Renames the files in from and changes them in "to"
 		 */
 		renameAssets: [
-			'bower_components/webcomponentsjs/*',
+			{
+				from: [
+					'bower_components/webcomponentsjs/webcomponents-lite.min.js',
+				],
+				to: [
+					'index.html'
+				]
+			},
+			{
+				from: [
+					'images/**'
+				],
+				to: [
+					'index.html'
+				]
+			}, 
+			{
+				from:[
+					'bower_components/*/resources/**',
+					'bower_components/*/fonts/**'
+				],
+				to:[
+					'elements/*.html'
+				]
+			}
+		],
+		cacheConfig:[
+			'bower_components/webcomponentsjs/webcomponents.min.js',
 			'bower_components/*/resources/**',
-			'bower_components/*/fonts/**',
+			'bower_components/*/fonts/**/*.{ttf,woff,eot,svg}',
 			'bower_components/cbn-ace-editor/src-min-noconflict/**',
 			'bower_components/sw-toolbox/**',
 			'bower_components/platinum-sw/service-worker.js',
-			'bower_components/platinum-sw/bootstrap/*'
+			'bower_components/platinum-sw/bootstrap/*',
+			'images/**',
+			'elements/*.{html,js}',
+			'favicon.ico'
 		],
-		
 		/**
 		 * The patterns of the files to delete
 		 * (relative to the destination directory).
