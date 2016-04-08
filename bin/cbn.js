@@ -178,11 +178,13 @@ gulp.task('cache-config', function(callback) {
 	if (options.env !== "production") {
 		return callback();
 	}
+	if(!config.patterns.cacheConfig || !config.patterns.cacheConfig.length){
+		return callback();
+	}
 	var cacheConfigF = {
 		cacheId: path.basename(__dirname),
 		disabled: false
 	};
-
 	glob(config.patterns.cacheConfig,
 		{
 			cwd: path.resolve("./" + config.dest),
