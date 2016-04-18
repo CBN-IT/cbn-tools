@@ -246,10 +246,17 @@ gulp.task('serve',
  * The default task.
  */
 gulp.task('default', function(cb) {
-	runSequence('clean-before', 
+	runSequence('clean-before',
 		['copy', 'build-scripts', 'build-styles', 'vulcanize'], cb);
 });
 
+/**
+ * Copy after clean sequence.
+ */
+gulp.task('clean-copy', function(cb) {
+	runSequence('clean-before',
+		['copy'], cb);
+});
 
 // Test Tasks
 // ----------
