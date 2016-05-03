@@ -355,6 +355,13 @@ gulp.task('default', function(cb) {
 		['copy', 'build-scripts', 'build-styles', 'vulcanize'],["rename-assets"],['cache-config'], cb);
 });
 
+/**
+ * Copy after clean sequence.
+ */
+gulp.task('clean-copy', function(cb) {
+	runSequence('clean-before',
+		['copy'], cb);
+});
 
 // Test Tasks
 // ----------
