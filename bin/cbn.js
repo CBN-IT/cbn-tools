@@ -139,7 +139,6 @@ gulp.task('rename-assets', function(callback) {
 		
 		var stream = gulp.src(conf.from,dest)
 			.on('data', function(p){
-				console.log(p.path);
 				var stat = fs.statSync(p.path);
 				if(stat!=null && !stat.isDirectory()) {
 					fs.unlinkSync(p.path);
@@ -157,7 +156,12 @@ gulp.task('rename-assets', function(callback) {
 			.on('end', function () {
 				gulp.src(conf.to, dest)
 					.pipe($.revReplace({
-						manifest: gulp.src(manifestPath)
+						manifest: gulp.src(manifestPath),
+						replaceInExtensions: {"indexOf": function(){
+							//this is a hack to enable all file extensions to be searched into
+							//they are using Array.indexOf to search trough the array for the extension
+							return 0;
+						}}
 					}))
 					.pipe(gulp.dest(config.dest))
 					.on('end', function () {
