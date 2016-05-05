@@ -55,10 +55,7 @@ module.exports = {
 		 * The html files to be vulcanized.
 		 */
 		vulcanize: [
-			'elements/elements.html',
-			'elements/elementsFirst.html',
-			'elements/elementsLogin.html',
-			'elements/elementsAdmin.html'
+			'elements/elements*.html'
 		],
 		
 		/**
@@ -93,17 +90,19 @@ module.exports = {
 		 * Path to the bower components to be copied to the target directory.
 		 */
 		components: [
-			'bower_components/webcomponentsjs/*',
+			'bower_components/webcomponentsjs/webcomponents-lite.min.js',
 			'bower_components/*/resources/**',
-			'bower_components/*/fonts/**',
+			'bower_components/*/fonts/**/*.{ttf,woff,eot,svg}',
 			'bower_components/cbn-ace-editor/src-min-noconflict/**',
-			'bower_components/sw-toolbox/**',
+			'bower_components/sw-toolbox/sw-toolbox.js',
+			'bower_components/sw-toolbox/sw-toolbox.map.json',
 			'bower_components/platinum-sw/service-worker.js',
 			'bower_components/platinum-sw/bootstrap/*',
 
 			// skip unit test files
 			'!bower_components/**/test/**',
-			'!bower_components/**/tests/**'
+			'!bower_components/**/tests/**',
+			'!bower_components/font-roboto-local/fonts/robotomono/**'
 		],
 		
 		/**
@@ -119,16 +118,66 @@ module.exports = {
 		],
 		
 		/**
-		 * Assets to rename. Only matches those among the `others` and `components` groups.
+		 * Assets to rename. Renames the files in "from" and changes them in "to"
 		 */
 		renameAssets: [
-			'bower_components/webcomponentsjs/*',
+			{
+				from: [
+					'bower_components/webcomponentsjs/webcomponents-lite.min.js',
+					'images/**'
+				],
+				to: [
+					'*.jsp',
+					'elements/*.html',
+					'manifest.json'
+				]
+			},
+			{
+				from: [
+					'bower_components/platinum-sw/service-worker.js'
+				],
+				to: [
+					'sw-import.js'
+				]
+			},
+			{
+				from: [
+					'sw-import.js'
+				],
+				to: [
+					'elements/*.html'
+				]
+			},
+			{
+				from: [
 			'bower_components/*/resources/**',
-			'bower_components/*/fonts/**',
-			'bower_components/cbn-ace-editor/src-min-noconflict/**',
-			'bower_components/sw-toolbox/**',
-			'bower_components/platinum-sw/service-worker.js',
-			'bower_components/platinum-sw/bootstrap/*'
+					'bower_components/*/fonts/**'
+				],
+				to: [
+					'elements/*.html'
+				]
+			},
+			{
+				from: [
+					'elements/*.html',
+					'elements/*.js'
+				],
+				to: [
+					'*.jsp'
+				]
+			}
+		],
+		
+		cacheConfig:[
+			'elements/*.html',
+			'elements/*.js',
+			'images/**',
+			'bower_components/*/resources/**',
+			'bower_components/*/fonts/**.ttf',
+			'!bower_components/font-roboto-local/fonts/**/*Thin*',
+			'!bower_components/font-roboto-local/fonts/**/*Black*',
+			'!bower_components/font-roboto-local/fonts/**/*Light*',
+			'!bower_components/font-roboto-local/fonts/**/*Medium*'
 		],
 		
 		/**
