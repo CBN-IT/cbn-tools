@@ -23,6 +23,7 @@ var fs = require('fs');
 var crypto = require('crypto');
 var glob = require('glob-all');
 var revReplace=require('gulp-rev-replace');
+var bower = require('bower');
 
 var options = minimist(process.argv.slice(2), {
 	string: [ 'env', 'cwd', 'buildfile' ],
@@ -216,6 +217,77 @@ gulp.task('cache-config', function(callback) {
 				fs.writeFile(configPath, JSON.stringify(cacheConfigF), callback);
 			}
 		});
+});
+
+gulp.task('bower-latest', function (callback) {
+	fs.readFile('bower.json', 'utf8', function (err, data) {
+		if (err) throw err;
+		var bowerFile = JSON.parse(data);
+		var dep = bowerFile.dependencies;
+		var toUpdate = [];
+		for (var i in dep) {
+			if (!dep.hasOwnProperty(i)) {
+				continue;
+			}
+			var d = dep[i];
+			if (d.indexOf("Polymer/") == 0 || d.indexOf("PolymerElements/") == 0) {
+				toUpdate.push(d.substring(0, d.indexOf("#")));
+			}
+		}
+		console.log("bower install --save-exact --force-latest " + toUpdate.join(" "));
+
+		if (toUpdate.length > 0) {
+			bower.commands
+				.install(toUpdate, {'saveExact': true, 'forceLatest': true})
+				.on('end', function (installed) {
+					callback();
+				})
+				.on('log', function (log) {
+					if (log.id === "install") {
+						console.log(log.message);
+					}
+				});
+		} else {
+			callback();
+		}
+
+	});
+});
+gulp.task('bower-update', function (callback) {
+	fs.readFile('bower.json', 'utf8', function (err, data) {
+		if (err) throw err;
+		var bowerFile = JSON.parse(data);
+		var dep = bowerFile.dependencies;
+		var toUpdate = [];
+		for (var i in dep) {
+			if (!dep.hasOwnProperty(i)) {
+				continue;
+			}
+			var d = dep[i];
+			if (d.indexOf("Polymer/") != 0 && d.indexOf("PolymerElements/") != 0) {
+				toUpdate.push(d.substring(0, d.indexOf("#")));
+			}
+		}
+		console.log("bower install " + toUpdate.join(" "));
+
+		if (toUpdate.length > 0) {
+			bower.commands
+				.install(toUpdate, {'forceLatest': true})
+				.on('end', function (installed) {
+					callback();
+				})
+				.on('log', function (log) {
+					if (log.id === "install") {
+						console.log(log.message);
+					}
+				})
+				.on('error', function (error) {
+					console.log(error);
+				});
+		} else {
+			callback();
+		}
+	});
 });
 
 /**
