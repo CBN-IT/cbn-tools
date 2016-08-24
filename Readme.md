@@ -14,7 +14,7 @@ Features:
 
 You can install it directly from the git repository by using the following command:
 ```bash
-npm install -g git+ssh://git@bitbucket.org:cbn-it/cbn-tools.git
+npm install -g CBN-IT/cbn-tools
 ```
 
 ## Usage
